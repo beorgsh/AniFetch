@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
+import { getAnalytics, isSupported } from "firebase/analytics";
 import { getAuth } from "firebase/auth";
 
 // Your web app's Firebase configuration
@@ -15,5 +15,18 @@ const firebaseConfig = {
 
 // Initialize Firebase
 export const app = initializeApp(firebaseConfig);
-export const analytics = getAnalytics(app);
 export const auth = getAuth(app);
+
+// Initialize Analytics conditionally
+// This prevents "Analytics not registered" errors in sandboxed environments (like AI Studio)
+export let analytics: any = null;
+
+isSupported().then((supported) => {
+  if (supported) {
+    analytics = getAnalytics(app);
+  } else {
+    console.warn("Analytics is not supported in this environment.");
+  }
+}).catch((err) => {
+    console.warn("Error checking analytics support:", err);
+});

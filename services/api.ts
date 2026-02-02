@@ -8,7 +8,14 @@ export const searchAnime = async (query: string): Promise<AnimeSearchResult[]> =
     const response = await fetch(`${BASE_URL}/?method=search&query=${encodeURIComponent(query)}`);
     if (!response.ok) throw new Error('Network response was not ok');
     const json = await response.json();
-    return json.data || [];
+    
+    // Map the 'img' property from API to 'poster' property used in UI
+    const mappedData = (json.data || []).map((item: any) => ({
+      ...item,
+      poster: item.img || item.poster // Ensure poster is populated
+    }));
+
+    return mappedData;
   } catch (error) {
     console.error("Failed to search anime:", error);
     return [];

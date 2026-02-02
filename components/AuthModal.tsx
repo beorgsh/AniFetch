@@ -4,8 +4,7 @@ import {
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword 
 } from 'firebase/auth';
-import { useAuth } from '../context/AuthContext';
-import { X, Mail, Lock, Loader2, AlertCircle, RefreshCw, UserCircle } from 'lucide-react';
+import { X, Mail, Lock, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -13,7 +12,6 @@ interface AuthModalProps {
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
-  const { loginAsGuest } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -95,11 +93,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
-  const handleGuestLogin = () => {
-    loginAsGuest();
-    onClose();
-  };
-
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onClick={onClose} />
@@ -150,15 +143,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (isLogin ? 'Sign In' : 'Create Account')}
           </button>
         </form>
-
-        <div className="mt-6 flex items-center gap-4 before:h-px before:flex-1 before:bg-zinc-800 after:h-px after:flex-1 after:bg-zinc-800">
-          <span className="text-xs text-zinc-500 font-medium uppercase">or</span>
-        </div>
-
-        <button onClick={handleGuestLogin} className="w-full mt-4 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white font-medium py-2.5 rounded-xl transition-all flex items-center justify-center gap-2">
-          <UserCircle className="w-5 h-5" />
-          Continue as Guest
-        </button>
 
         <div className="mt-6 text-center">
           <button onClick={toggleMode} className="text-sm text-zinc-400 hover:text-white transition-colors">{isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}</button>

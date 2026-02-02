@@ -10,28 +10,24 @@ interface AuthContextType {
   user: any | null;
   loading: boolean;
   signOut: () => Promise<void>;
-  loginAsGuest: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
   signOut: async () => {},
-  loginAsGuest: () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
   const [user, setUser] = useState<any | null>(null);
-  const [guestUser, setGuestUser] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       if (firebaseUser) {
         setUser(firebaseUser);
-        setGuestUser(null);
       } else {
         setUser(null);
       }
@@ -42,28 +38,13 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
   }, []);
 
   const signOut = async () => {
-    if (guestUser) {
-      setGuestUser(null);
-    } else {
-      await firebaseSignOut(auth);
-    }
-  };
-
-  const loginAsGuest = () => {
-    const guest = {
-      uid: 'guest-' + Math.random().toString(36).substr(2, 9),
-      email: 'guest@anifetch.com',
-      displayName: 'Guest User',
-      isGuest: true
-    };
-    setGuestUser(guest);
+    await firebaseSignOut(auth);
   };
 
   const value = {
-    user: user || guestUser,
+    user,
     loading,
-    signOut,
-    loginAsGuest
+    signOut
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
