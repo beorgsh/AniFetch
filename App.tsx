@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Header } from './components/Header';
 import { Home } from './components/Home';
@@ -19,7 +20,6 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background text-zinc-100 relative selection:bg-indigo-500/30">
-      {/* Grid Background */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute inset-0 bg-grid-white [mask-image:linear-gradient(to_bottom,transparent,black_10%,black_90%,transparent)] opacity-20"></div>
         <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background"></div>

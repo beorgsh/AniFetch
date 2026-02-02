@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { AnimeSearchResult } from '../types';
 import { searchAnime } from '../services/api';
@@ -43,10 +44,10 @@ export const Home: React.FC = () => {
     <div className="flex flex-col min-h-[80vh]">
       {view === 'search' ? (
         <>
-          <div className={`transition-all duration-500 ease-in-out flex flex-col items-center justify-start mb-12`}>
+          <div className="transition-all duration-500 ease-in-out flex flex-col items-center justify-start mb-12">
             <form onSubmit={handleSearch} className="relative w-full max-w-2xl scale-100">
               <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                <Search className={`w-5 h-5 text-indigo-500`} />
+                <Search className="w-5 h-5 text-indigo-500" />
               </div>
               <input
                 type="text"
