@@ -1,0 +1,74 @@
+import { AnimeSearchResult, SeriesDetails, EpisodeLinksResponse, DownloadLink, AiringResponse } from '../types';
+
+const BASE_URL = 'https://anime.apex-cloud.workers.dev';
+
+export const searchAnime = async (query: string): Promise<AnimeSearchResult[]> => {
+  if (!query) return [];
+  try {
+    const response = await fetch(`${BASE_URL}/?method=search&query=${encodeURIComponent(query)}`);
+    if (!response.ok) throw new Error('Network response was not ok');
+    const json = await response.json();
+    return json.data || [];
+  } catch (error) {
+    console.error("Failed to search anime:", error);
+    return [];
+  }
+};
+
+export const getSeriesDetails = async (session: string, page: number = 1): Promise<SeriesDetails | null> => {
+  try {
+    const response = await fetch(`${BASE_URL}/?method=series&session=${session}&page=${page}`);
+    if (!response.ok) throw new Error('Network response was not ok');
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Failed to fetch series details:", error);
+    return null;
+  }
+};
+
+export const getEpisodeLinks = async (session: string, episodeId: string): Promise<DownloadLink[] | null> => {
+  try {
+    const response = await fetch(`${BASE_URL}/?method=episode&session=${session}&ep=${episodeId}`);
+    if (!response.ok) throw new Error('Network response was not ok');
+    const data = await response.json();
+    // Ensure we always return an array
+    if (Array.isArray(data)) {
+      return data;
+    }
+    return [];
+  } catch (error) {
+    console.error("Failed to fetch episode links:", error);
+    return null;
+  }
+};
+
+export const getAiringAnime = async (page: number = 1): Promise<AiringResponse | null> => {
+  try {
+    // Attempt to use the worker endpoint for airing data as well
+    const response = await fetch(`${BASE_URL}/?method=airing&page=${page}`);
+    
+    if (!response.ok) {
+        throw new Error(`Network response was not ok: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Failed to fetch airing anime from worker, trying fallback:", error);
+    
+    // Fallback: Try a different proxy if the worker method isn't supported or fails
+    try {
+        const targetUrl = `https://animepahe.si/api?m=airing&page=${page}`;
+        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
+        const fallbackResponse = await fetch(proxyUrl);
+        if (fallbackResponse.ok) {
+            return await fallbackResponse.json();
+        }
+    } catch (fallbackError) {
+        console.error("Fallback fetch also failed:", fallbackError);
+    }
+    
+    return null;
+  }
+};
