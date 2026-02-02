@@ -1,8 +1,11 @@
-
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../services/supabase';
+import { auth } from '../services/firebase';
+import { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword 
+} from 'firebase/auth';
 import { useAuth } from '../context/AuthContext';
-import { X, Mail, Lock, Loader2, AlertCircle, RefreshCw, UserCircle, Chrome } from 'lucide-react';
+import { X, Mail, Lock, Loader2, AlertCircle, RefreshCw, UserCircle } from 'lucide-react';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -10,12 +13,11 @@ interface AuthModalProps {
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
-  const { loginAsGuest, signInWithGoogle } = useAuth();
+  const { loginAsGuest } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
   const [mathChallenge, setMathChallenge] = useState({ num1: 0, num2: 0 });
@@ -40,7 +42,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
-  // Add toggleMode to fix "Cannot find name 'toggleMode'" error on line 173
   const toggleMode = () => {
     setIsLogin(!isLogin);
     setError(null);
@@ -73,29 +74,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     setLoading(true);
     try {
       if (isLogin) {
-        const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password });
-        if (signInErr) throw signInErr;
+        await signInWithEmailAndPassword(auth, email, password);
       } else {
-        const { error: signUpErr } = await supabase.auth.signUp({ email, password });
-        if (signUpErr) throw signUpErr;
+        await createUserWithEmailAndPassword(auth, email, password);
       }
       onClose();
     } catch (err: any) {
-      setError(err.message || 'An error occurred during authentication');
+      let errorMessage = 'An error occurred during authentication';
+      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
+        errorMessage = 'Invalid email or password.';
+      } else if (err.code === 'auth/email-already-in-use') {
+        errorMessage = 'This email is already registered.';
+      } else if (err.code === 'auth/weak-password') {
+        errorMessage = 'Password is too weak.';
+      }
+      setError(errorMessage);
       generateChallenge();
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleGoogleLogin = async () => {
-    setError(null);
-    setGoogleLoading(true);
-    try {
-      await signInWithGoogle();
-    } catch (err: any) {
-      setError(err.message || 'Failed to sign in with Google');
-      setGoogleLoading(false);
     }
   };
 
@@ -123,17 +119,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             <p className="text-sm text-red-400">{error}</p>
           </div>
         )}
-
-        <div className="space-y-3 mb-6">
-          <button onClick={handleGoogleLogin} disabled={googleLoading} className="w-full flex items-center justify-center gap-3 bg-white hover:bg-zinc-200 text-zinc-900 font-bold py-2.5 rounded-xl transition-all disabled:opacity-50">
-            {googleLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Chrome className="w-5 h-5 text-indigo-600" />}
-            Continue with Google
-          </button>
-        </div>
-
-        <div className="flex items-center gap-4 mb-6 before:h-px before:flex-1 before:bg-zinc-800 after:h-px after:flex-1 after:bg-zinc-800">
-          <span className="text-xs text-zinc-500 font-medium uppercase">or use email</span>
-        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
@@ -166,7 +151,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           </button>
         </form>
 
-        <div className="mt-4 flex items-center gap-4 before:h-px before:flex-1 before:bg-zinc-800 after:h-px after:flex-1 after:bg-zinc-800">
+        <div className="mt-6 flex items-center gap-4 before:h-px before:flex-1 before:bg-zinc-800 after:h-px after:flex-1 after:bg-zinc-800">
           <span className="text-xs text-zinc-500 font-medium uppercase">or</span>
         </div>
 
