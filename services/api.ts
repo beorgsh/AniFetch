@@ -1,4 +1,4 @@
-import { AnimeSearchResult, SeriesDetails, EpisodeLinksResponse, DownloadLink, AiringResponse } from '../types';
+import { AnimeSearchResult, SeriesDetails, DownloadLink, AiringResponse } from '../types';
 
 const BASE_URL = 'https://anime.apex-cloud.workers.dev';
 

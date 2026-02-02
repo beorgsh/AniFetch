@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Episode, DownloadLink } from '../types';
 import { getEpisodeLinks } from '../services/api';
-import { Download, ExternalLink, Play, Loader2, MonitorPlay, Subtitles, Mic, ChevronDown, ChevronUp } from 'lucide-react';
+import { Download, ExternalLink, Play, Loader2, Subtitles, Mic, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface EpisodeListProps {
   session: string;
@@ -37,10 +37,6 @@ export const EpisodeList: React.FC<EpisodeListProps> = ({ session, episodes, tar
                 // Wait a brief moment for layout to settle then scroll
                 setTimeout(() => {
                     el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    // Optional: Open the episode automatically
-                    if (!expanded[targetEp.session]) {
-                        // toggleEpisode(targetEp); // Uncomment if you want to auto-expand
-                    }
                 }, 100);
             }
         }
@@ -130,7 +126,7 @@ export const EpisodeList: React.FC<EpisodeListProps> = ({ session, episodes, tar
                         className="flex flex-col md:flex-row gap-4 p-4 cursor-pointer"
                         onClick={() => toggleEpisode(ep)}
                     >
-                        {/* Thumbnail - Netflix Style Left Side */}
+                        {/* Thumbnail */}
                         <div className="relative w-full md:w-48 aspect-video flex-shrink-0 rounded-md overflow-hidden bg-black">
                             <img 
                                 src={ep.snapshot} 
@@ -138,7 +134,6 @@ export const EpisodeList: React.FC<EpisodeListProps> = ({ session, episodes, tar
                                 className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
                                 loading="lazy"
                             />
-                            {/* Centered Play Icon Overlay */}
                             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/30 backdrop-blur-[1px]">
                                 <div className="w-10 h-10 rounded-full border border-white flex items-center justify-center bg-black/40">
                                     <Play className="w-4 h-4 fill-white text-white ml-0.5" />
@@ -146,7 +141,7 @@ export const EpisodeList: React.FC<EpisodeListProps> = ({ session, episodes, tar
                             </div>
                         </div>
 
-                        {/* Content Area - Right Side */}
+                        {/* Content Area */}
                         <div className="flex flex-col justify-center flex-grow min-w-0">
                             <div className="flex items-center justify-between mb-1">
                                 <h3 className={`text-lg font-bold transition-colors ${isTarget ? 'text-indigo-400' : 'text-white group-hover:text-indigo-400'}`}>
@@ -157,7 +152,6 @@ export const EpisodeList: React.FC<EpisodeListProps> = ({ session, episodes, tar
                                 </div>
                             </div>
                             <p className="text-sm text-zinc-400 line-clamp-2">
-                                {/* Since we lack a synopsis, we put a generic placeholder or just show 'Watch now' */}
                                 View download options and streams available for this episode.
                             </p>
                         </div>

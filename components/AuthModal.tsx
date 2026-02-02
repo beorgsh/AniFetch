@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/supabase';
-import { X, Mail, Lock, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { X, Mail, Lock, Loader2, AlertCircle, RefreshCw, UserCircle, Chrome } from 'lucide-react';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -8,10 +9,12 @@ interface AuthModalProps {
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
+  const { loginAsGuest, signInWithGoogle } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
   // Math Challenge State
@@ -39,20 +42,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   const validateForm = (): boolean => {
-    // Email Regex Validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setError("Please enter a valid email address.");
+    if (!email.trim()) {
+      setError("Email cannot be empty.");
       return false;
     }
 
-    // Password Length Validation
     if (password.length < 8) {
       setError("Password must be at least 8 characters long.");
       return false;
     }
 
-    // Bot Protection (Math Challenge)
     const sum = mathChallenge.num1 + mathChallenge.num2;
     if (parseInt(mathAnswer) !== sum) {
       setError("Incorrect answer to the math challenge.");
@@ -67,7 +66,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     setError(null);
 
     if (!validateForm()) {
-      generateChallenge(); // Regenerate on failure
+      generateChallenge();
       return;
     }
 
@@ -88,7 +87,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         if (error) throw error;
       }
       
-      // Reset state on success
       resetForm();
       onClose();
     } catch (err: any) {
@@ -97,6 +95,23 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGoogleLogin = async () => {
+    setError(null);
+    setGoogleLoading(true);
+    try {
+      await signInWithGoogle();
+    } catch (err: any) {
+      setError(err.message || 'Failed to sign in with Google');
+      setGoogleLoading(false);
+    }
+  };
+
+  const handleGuestLogin = () => {
+    loginAsGuest();
+    resetForm();
+    onClose();
   };
 
   const resetForm = () => {
@@ -149,6 +164,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           </div>
         )}
 
+        <div className="space-y-3 mb-6">
+          <button
+            onClick={handleGoogleLogin}
+            disabled={googleLoading}
+            className="w-full flex items-center justify-center gap-3 bg-white hover:bg-zinc-200 text-zinc-900 font-bold py-2.5 rounded-xl transition-all disabled:opacity-50"
+          >
+            {googleLoading ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <Chrome className="w-5 h-5 text-indigo-600" />
+            )}
+            Continue with Google
+          </button>
+        </div>
+
+        <div className="flex items-center gap-4 mb-6 before:h-px before:flex-1 before:bg-zinc-800 after:h-px after:flex-1 after:bg-zinc-800">
+          <span className="text-xs text-zinc-500 font-medium uppercase">or use email</span>
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-zinc-300 ml-1">Email</label>
@@ -182,7 +216,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             </div>
           </div>
 
-          {/* Math Challenge Section */}
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-zinc-300 ml-1">Human Verify</label>
             <div className="flex items-center gap-3">
@@ -219,6 +252,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             )}
           </button>
         </form>
+
+        <div className="mt-4 flex items-center gap-4 before:h-px before:flex-1 before:bg-zinc-800 after:h-px after:flex-1 after:bg-zinc-800">
+          <span className="text-xs text-zinc-500 font-medium uppercase">or</span>
+        </div>
+
+        <button
+          onClick={handleGuestLogin}
+          className="w-full mt-4 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white font-medium py-2.5 rounded-xl transition-all flex items-center justify-center gap-2"
+        >
+          <UserCircle className="w-5 h-5" />
+          Continue as Guest
+        </button>
 
         <div className="mt-6 text-center">
           <button
