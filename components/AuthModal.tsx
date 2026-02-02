@@ -1,7 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/supabase';
-import { X, Mail, Lock, Loader2, AlertCircle, ShieldCheck } from 'lucide-react';
-import ReCAPTCHA from 'react-google-recaptcha';
+import { X, Mail, Lock, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -14,13 +13,28 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   
-  const recaptchaRef = useRef<ReCAPTCHA>(null);
+  // Math Challenge State
+  const [mathChallenge, setMathChallenge] = useState({ num1: 0, num2: 0 });
+  const [mathAnswer, setMathAnswer] = useState('');
 
-  // Google reCAPTCHA Test Key. 
-  // IMPORTANT: Replace this with your own Site Key from the Google Cloud Console for production.
-  const SITE_KEY = "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI";
+  const generateChallenge = () => {
+    setMathChallenge({
+      num1: Math.floor(Math.random() * 10) + 1,
+      num2: Math.floor(Math.random() * 10) + 1
+    });
+    setMathAnswer('');
+  };
+
+  // Reset/Generate challenge when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      generateChallenge();
+      setError(null);
+      setEmail('');
+      setPassword('');
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -38,9 +52,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       return false;
     }
 
-    // Bot Protection
-    if (!captchaToken) {
-      setError("Please verify you are not a robot.");
+    // Bot Protection (Math Challenge)
+    const sum = mathChallenge.num1 + mathChallenge.num2;
+    if (parseInt(mathAnswer) !== sum) {
+      setError("Incorrect answer to the math challenge.");
       return false;
     }
 
@@ -52,6 +67,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     setError(null);
 
     if (!validateForm()) {
+      generateChallenge(); // Regenerate on failure
       return;
     }
 
@@ -61,19 +77,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({
           email,
-          password,
-          options: {
-            captchaToken: captchaToken // Pass token if using Supabase Enterprise Captcha, otherwise purely client-side gate
-          }
+          password
         });
         if (error) throw error;
       } else {
         const { error } = await supabase.auth.signUp({
           email,
-          password,
-          options: {
-            captchaToken: captchaToken
-          }
+          password
         });
         if (error) throw error;
       }
@@ -83,8 +93,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       onClose();
     } catch (err: any) {
       setError(err.message || 'An error occurred during authentication');
-      recaptchaRef.current?.reset(); // Reset captcha on error
-      setCaptchaToken(null);
+      generateChallenge();
     } finally {
       setLoading(false);
     }
@@ -94,15 +103,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     setEmail('');
     setPassword('');
     setError(null);
-    setCaptchaToken(null);
-    recaptchaRef.current?.reset();
+    setMathAnswer('');
+    generateChallenge();
   };
 
   const toggleMode = () => {
     setIsLogin(!isLogin);
     setError(null);
-    recaptchaRef.current?.reset();
-    setCaptchaToken(null);
+    generateChallenge();
   };
 
   return (
@@ -174,20 +182,35 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             </div>
           </div>
 
-          {/* reCAPTCHA Section */}
-          <div className="flex justify-center pt-2 pb-2">
-            <ReCAPTCHA
-              ref={recaptchaRef}
-              sitekey={SITE_KEY}
-              onChange={(token) => setCaptchaToken(token)}
-              theme="dark"
-            />
+          {/* Math Challenge Section */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-zinc-300 ml-1">Human Verify</label>
+            <div className="flex items-center gap-3">
+              <div className="bg-zinc-800/80 px-4 py-2.5 rounded-xl border border-zinc-700 text-zinc-300 font-mono select-none flex-grow text-center">
+                {mathChallenge.num1} + {mathChallenge.num2} = ?
+              </div>
+              <input
+                type="number"
+                value={mathAnswer}
+                onChange={(e) => setMathAnswer(e.target.value)}
+                className="w-24 bg-black/50 border border-zinc-800 rounded-xl py-2.5 px-3 text-center text-white placeholder:text-zinc-600 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all"
+                placeholder="Sum"
+              />
+              <button
+                type="button"
+                onClick={generateChallenge}
+                className="p-2.5 rounded-xl bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-white hover:bg-zinc-700 transition-colors"
+                title="New Challenge"
+              >
+                <RefreshCw className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full mt-2 bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 rounded-xl transition-all shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 rounded-xl transition-all shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {loading ? (
               <Loader2 className="w-4 h-4 animate-spin" />
