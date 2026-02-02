@@ -3,6 +3,8 @@ import { Header } from './components/Header';
 import { AnimeCard } from './components/AnimeCard';
 import { SeriesView } from './components/SeriesView';
 import { AiringSection } from './components/AiringSection';
+import { AuthModal } from './components/AuthModal';
+import { AuthProvider } from './context/AuthContext';
 import { AnimeSearchResult } from './types';
 import { searchAnime } from './services/api';
 import { Loader2, Search, Zap } from 'lucide-react';
@@ -14,6 +16,7 @@ const AppContent: React.FC = () => {
   const [selectedAnime, setSelectedAnime] = useState<AnimeSearchResult | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   const handleSearch = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -48,7 +51,7 @@ const AppContent: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background"></div>
       </div>
 
-      <Header />
+      <Header onAuthClick={() => setIsAuthModalOpen(true)} />
 
       <main className="container mx-auto px-6 py-8 pt-24 relative z-10">
         {view === 'search' && (
@@ -136,6 +139,11 @@ const AppContent: React.FC = () => {
         {view === 'details' && selectedAnime && (
           <SeriesView anime={selectedAnime} onBack={handleBack} />
         )}
+
+        <AuthModal 
+            isOpen={isAuthModalOpen} 
+            onClose={() => setIsAuthModalOpen(false)} 
+        />
       </main>
     </div>
   );
@@ -143,7 +151,9 @@ const AppContent: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    <AppContent />
+    <AuthProvider>
+        <AppContent />
+    </AuthProvider>
   );
 };
 
