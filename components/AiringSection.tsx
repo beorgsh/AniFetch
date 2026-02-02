@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { AiringAnime, AnimeSearchResult } from '../types';
 import { getAiringAnime } from '../services/api';
 import { AiringCard } from './AiringCard';
-import { ChevronLeft, ChevronRight, Clock, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, RefreshCw } from 'lucide-react';
 
 interface AiringSectionProps {
   onAnimeClick: (anime: AnimeSearchResult) => void;
@@ -11,6 +11,7 @@ interface AiringSectionProps {
 export const AiringSection: React.FC<AiringSectionProps> = ({ onAnimeClick }) => {
   const [airingList, setAiringList] = useState<AiringAnime[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
@@ -18,11 +19,21 @@ export const AiringSection: React.FC<AiringSectionProps> = ({ onAnimeClick }) =>
     let mounted = true;
     const fetchAiring = async () => {
       setLoading(true);
-      const data = await getAiringAnime(page);
-      if (mounted && data) {
-        setAiringList(data.data);
-        setTotalPages(data.last_page);
-        setLoading(false);
+      setError(false);
+      try {
+        const data = await getAiringAnime(page);
+        if (mounted) {
+          if (data && data.data) {
+            setAiringList(data.data);
+            setTotalPages(data.last_page || 1);
+          } else {
+            setError(true);
+          }
+        }
+      } catch (e) {
+        if (mounted) setError(true);
+      } finally {
+        if (mounted) setLoading(false);
       }
     };
     fetchAiring();
@@ -61,6 +72,21 @@ export const AiringSection: React.FC<AiringSectionProps> = ({ onAnimeClick }) =>
         }
     }
   };
+
+  if (error && airingList.length === 0) {
+    return (
+        <div className="mt-12 text-center p-8 bg-zinc-900/50 rounded-2xl border border-zinc-800">
+            <p className="text-zinc-500 mb-4">Unable to load airing schedules.</p>
+            <button 
+                onClick={() => setPage(1)} // Trigger re-fetch
+                className="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 transition-colors"
+            >
+                <RefreshCw className="w-4 h-4" />
+                Try Again
+            </button>
+        </div>
+    );
+  }
 
   return (
     <div id="airing-section" className="mt-12 animate-in fade-in slide-in-from-bottom-8 duration-700">

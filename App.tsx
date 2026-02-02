@@ -6,7 +6,6 @@ import { AiringSection } from './components/AiringSection';
 import { AnimeSearchResult } from './types';
 import { searchAnime } from './services/api';
 import { Loader2, Search, Zap } from 'lucide-react';
-import { AuthProvider } from './context/AuthContext';
 
 const AppContent: React.FC = () => {
   const [view, setView] = useState<'search' | 'details'>('search');
@@ -144,9 +143,7 @@ const AppContent: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <AppContent />
   );
 };
 
