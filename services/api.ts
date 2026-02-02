@@ -32,7 +32,6 @@ export const getEpisodeLinks = async (session: string, episodeId: string): Promi
     const response = await fetch(`${BASE_URL}/?method=episode&session=${session}&ep=${episodeId}`);
     if (!response.ok) throw new Error('Network response was not ok');
     const data = await response.json();
-    // Ensure we always return an array
     if (Array.isArray(data)) {
       return data;
     }
@@ -45,19 +44,14 @@ export const getEpisodeLinks = async (session: string, episodeId: string): Promi
 
 export const getAiringAnime = async (page: number = 1): Promise<AiringResponse | null> => {
   try {
-    // Attempt to use the worker endpoint for airing data as well
     const response = await fetch(`${BASE_URL}/?method=airing&page=${page}`);
-    
     if (!response.ok) {
         throw new Error(`Network response was not ok: ${response.status}`);
     }
-    
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error("Failed to fetch airing anime from worker, trying fallback:", error);
-    
-    // Fallback: Try a different proxy if the worker method isn't supported or fails
+    console.error("Failed to fetch airing anime:", error);
     try {
         const targetUrl = `https://animepahe.si/api?m=airing&page=${page}`;
         const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
@@ -66,9 +60,8 @@ export const getAiringAnime = async (page: number = 1): Promise<AiringResponse |
             return await fallbackResponse.json();
         }
     } catch (fallbackError) {
-        console.error("Fallback fetch also failed:", fallbackError);
+        console.error("Fallback fetch failed:", fallbackError);
     }
-    
     return null;
   }
 };

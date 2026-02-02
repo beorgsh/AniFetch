@@ -25,16 +25,12 @@ export const EpisodeList: React.FC<EpisodeListProps> = ({ session, episodes, tar
   const [expanded, setExpanded] = useState<ExpandedEpisodeState>({});
   const episodeRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
-  // Effect to handle scrolling and highlighting targeted episode
   useEffect(() => {
     if (targetEpisode && episodes) {
-        // Find the episode that matches the target
         const targetEp = episodes.find(e => e.episode.toString() === targetEpisode.toString());
-        
         if (targetEp) {
             const el = episodeRefs.current[targetEp.session];
             if (el) {
-                // Wait a brief moment for layout to settle then scroll
                 setTimeout(() => {
                     el.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }, 100);
@@ -60,7 +56,6 @@ export const EpisodeList: React.FC<EpisodeListProps> = ({ session, episodes, tar
 
     try {
       const links = await getEpisodeLinks(session, epId) || [];
-      
       let subLinks: DownloadLink[] = [];
       let dubLinks: DownloadLink[] = [];
 
@@ -112,7 +107,6 @@ export const EpisodeList: React.FC<EpisodeListProps> = ({ session, episodes, tar
             const state = expanded[epId];
             const isOpen = !!state;
             const isTarget = targetEpisode && ep.episode.toString() === targetEpisode.toString();
-
             const currentLinks = state ? (state.selectedAudio === 'sub' ? state.sub : state.dub) : [];
             const hasDub = state && state.dub.length > 0;
 
@@ -126,7 +120,6 @@ export const EpisodeList: React.FC<EpisodeListProps> = ({ session, episodes, tar
                         className="flex flex-col md:flex-row gap-4 p-4 cursor-pointer"
                         onClick={() => toggleEpisode(ep)}
                     >
-                        {/* Thumbnail */}
                         <div className="relative w-full md:w-48 aspect-video flex-shrink-0 rounded-md overflow-hidden bg-black">
                             <img 
                                 src={ep.snapshot} 
@@ -141,7 +134,6 @@ export const EpisodeList: React.FC<EpisodeListProps> = ({ session, episodes, tar
                             </div>
                         </div>
 
-                        {/* Content Area */}
                         <div className="flex flex-col justify-center flex-grow min-w-0">
                             <div className="flex items-center justify-between mb-1">
                                 <h3 className={`text-lg font-bold transition-colors ${isTarget ? 'text-indigo-400' : 'text-white group-hover:text-indigo-400'}`}>
@@ -157,7 +149,6 @@ export const EpisodeList: React.FC<EpisodeListProps> = ({ session, episodes, tar
                         </div>
                     </div>
 
-                    {/* Expandable Section for Links */}
                     {isOpen && (
                         <div className="px-4 pb-4 md:pl-[224px] animate-in slide-in-from-top-2 fade-in duration-300">
                              <div className="pt-2 border-t border-zinc-800/50">
@@ -172,7 +163,6 @@ export const EpisodeList: React.FC<EpisodeListProps> = ({ session, episodes, tar
                                     </div>
                                 ) : (
                                     <div className="space-y-3 pt-2">
-                                        {/* Audio Toggle */}
                                         {hasDub && (
                                             <div className="flex items-center gap-4 text-sm font-medium">
                                                 <button 
@@ -192,7 +182,6 @@ export const EpisodeList: React.FC<EpisodeListProps> = ({ session, episodes, tar
                                             </div>
                                         )}
 
-                                        {/* Links Grid */}
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                             {currentLinks.map((link, idx) => (
                                                 <a 
